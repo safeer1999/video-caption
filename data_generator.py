@@ -61,35 +61,38 @@ def data_generator(features,captions,tokenizer,maxlen):
 		yield ([X,X_caption],y)
 
 
-def data_generator_vatex(features_files,captions, tokenizer,maxlen):
+def data_generator_vatex(features_files,captions, tokenizer,maxlen,epochs=1):
+	for epoch in range(epochs):
 
+		for i in range(len(features_files)):
 
-	for i in range(len(features_files)):
+			video_id = features_files[i][15:-4]
 
-		video_id = features_files[i][15:-4]
+			X = np.empty(shape=(0,1024))
+			X_caption = np.empty(shape=(0,maxlen))
+			y= np.asarray([])
+			try:
+				caption = tokenizer.texts_to_sequences(captions[video_id])
+			except KeyError:
+				continue
 
-		X = np.empty(shape=(0,1024))
-		X_caption = np.empty(shape=(0,maxlen))
-		y= np.asarray([])
-		caption = tokenizer.texts_to_sequences(captions[video_id])
+			video_mat = np.load(features_files[i])
+			video_mat = np.squeeze(video_mat,axis=0)
 
-		video_mat = np.load(features_files[i])
-		video_mat = np.squeeze(video_mat,axis=0)
+			for j in range(len(caption)):
 
-		for j in range(len(caption)):
+				for k in range(1,len(caption[j])):
 
-			for k in range(1,len(caption[j])):
+					X = np.append(X,video_mat,axis=0)
+					seq = pad_sequences([caption[j][:k]],maxlen,padding='post')
+					X_caption = np.append(X_caption,seq,axis=0)
+					y = np.append(y,caption[j][k])
 
-				X = np.append(X,video_mat,axis=0)
-				seq = pad_sequences([caption[j][:k]],maxlen,padding='post')
-				X_caption = np.append(X_caption,seq,axis=0)
-				y = np.append(y,caption[j][k])
-
-		X = np.vsplit(X,X.shape[0]//video_mat.shape[0])
-		X = list(map(lambda x : np.expand_dims(x,axis=0),X))
-		X = np.vstack(X)
-		#print(X.shape,X_caption.shape,y.shape)
-		yield ([X,X_caption],y)
+			X = np.vsplit(X,X.shape[0]//video_mat.shape[0])
+			X = list(map(lambda x : np.expand_dims(x,axis=0),X))
+			X = np.vstack(X)
+			#print(X.shape,X_caption.shape,y.shape)
+			yield ([X,X_caption],y)
 
 
 
@@ -116,10 +119,11 @@ def main():
 	for i in captions.values():
 		cap_str+=i
 
-		for j in i:
-			maxlen = max(maxlen,len(j))
-
 	tokenizer.fit_on_texts(cap_str)
+	cap_tokens = tokenizer.texts_to_sequences(cap_str)
+
+	for i in cap_tokens:
+		maxlen = max(maxlen,len(i))
 
 	del cap_str
 
@@ -127,6 +131,8 @@ def main():
 	gen = data_generator_vatex(features_files,captions,tokenizer,maxlen)
 
 	data = next(gen)
+
+
 
 
 
