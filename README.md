@@ -9,7 +9,7 @@ requirements.txt
 ## Code Execution
 For training and prediction we are using training_vatex.py
 
-In training_vatex.py, there are three main functions: ```main()``` , ```main1()```
+In training_vatex.py, there are two main functions: ```main()``` , ```main1()```
 
 For training the model in the code training_vatex.py change if main block to :
 ```
