@@ -132,6 +132,8 @@ def main():
 
 	data = next(gen)
 
+	print(tokenizer.sequences_to_texts(data[0][1]))
+
 
 
 
